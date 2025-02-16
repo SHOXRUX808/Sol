@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BEO - Eco Blockchain</title>
+  <style>
+    /* Цветовые переменные для светлой и тёмной тем */
+    :root {
+      --bg-color: #f5f5f5;
+      --text-color: #222;
+      --primary-color: #00c896;
+      --secondary-color: #007f5f;
+      --btn-color: #00b87a;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --neon-color: #00ff9d;
+    }
+    .dark-theme {
+      --bg-color: #121212;
+      --text-color: #f5f5f5;
+      --primary-color: #00e69f;
+      --secondary-color: #005f47;
+      --btn-color: #00d68f;
+      --shadow-color: rgba(255, 255, 255, 0.1);
+      --neon-color: #00ffa3;
+    }
+    /* Сброс стилей */
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Arial, sans-serif; transition: all 0.3s ease; }
+    body { background: var(--bg-color); color: var(--text-color); position: relative; overflow-x: hidden; }
+    /* Модальное окно */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.6);
+    }
+    .modal-content {
+      background: var(--bg-color);
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 800px;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+    .btn {
+      padding: 10px 20px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    .btn:hover { background: var(--secondary-color); }
+    /* Дополнительные стили для шапки и навигации (упрощённо) */
+    header { padding: 20px; background: var(--primary-color); color: white; }
+    .logo { font-size: 1.8em; }
+  </style>
+</head>
+<body>
+  <!-- Хедер -->
+  <header>
+    <div class="logo">BEO</div>
+  </header>
+  <!-- Основной контент -->
+  <main>
+    <section id="hero">
+      <h1>Eco-Friendly Blockchain 3.0</h1>
+      <p>Innovative technology for a sustainable, digital future merging ecology, tech, crypto & AI.</p>
+    </section>
+  </main>
+  <!-- Футер с кнопкой Contact -->
+  <footer id="contact">
+    <button id="open-contact" class="btn">Contact Us</button>
+  </footer>
+
+  <!-- Модальное окно Contact -->
+  <div id="modal-contact" class="modal">
+    <div class="modal-content">
+      <span class="close" data-modal="modal-contact">&times;</span>
+      <h2>Contact Us</h2>
+      <p>Свяжитесь с нами через социальные сети или по электронной почте:</p>
+      <p><strong>Email:</strong> <a href="mailto:coinbeo200@gmail.com">coinbeo200@gmail.com</a></p>
+      <button class="btn">Telegram</button>
+      <button class="btn">Twitter</button>
+      <button class="btn">GitHub</button>
+      <hr>
+      <h3>Пожертвовать SOL</h3>
+      <button id="donate-sol" class="btn">Donate SOL</button>
+    </div>
+  </div>
+
+  <!-- Подключение библиотек -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Подключение библиотеки Solana web3.js -->
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+
+  <!-- JavaScript для функционала сайта -->
+  <script>
+    // Переключение темы (упрощённо)
+    const themeToggle = document.querySelector(".theme-toggle");
+    const currentTheme = localStorage.getItem("theme") || "light";
+    if (currentTheme === "dark") {
+      document.body.classList.add("dark-theme");
+    }
+    if(themeToggle) {
+      themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-theme");
+        const newTheme = document.body.classList.contains("dark-theme") ? "dark" : "light";
+        localStorage.setItem("theme", newTheme);
+      });
+    }
+
+    // Функции для модального окна
+    function openModal(modalId) {
+      document.getElementById(modalId).style.display = "block";
+    }
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = "none";
+    }
+    document.getElementById("open-contact").addEventListener("click", () => {
+      openModal("modal-contact");
+    });
+    document.querySelectorAll(".close").forEach(closeBtn => {
+      closeBtn.addEventListener("click", (e) => {
+        const modalId = e.target.getAttribute("data-modal");
+        closeModal(modalId);
+      });
+    });
+    window.addEventListener("click", (e) => {
+      document.querySelectorAll(".modal").forEach(modal => {
+        if (e.target === modal) { modal.style.display = "none"; }
+      });
+    });
+
+    // Функция для отправки пожертвования SOL через Phantom Wallet
+    async function sendSolDonation() {
+      if (!window.solana || !window.solana.isPhantom) {
+        alert("Phantom Wallet не найден! Пожалуйста, установите его для отправки пожертвования.");
+        return;
+      }
+      try {
+        // Подключение к кошельку Phantom
+        const response = await window.solana.connect();
+        const fromPublicKey = response.publicKey;
+        // Соединение с основным кластером Solana (mainnet-beta)
+        const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"));
+        // Замените на свой адрес для получения пожертвований
+        const donationAddress = new solanaWeb3.PublicKey("YOUR_DONATION_ADDRESS");
+        // Задаём сумму пожертвования: 0.01 SOL (1 SOL = 1,000,000,000 lamports)
+        const donationAmount = 0.01 * solanaWeb3.LAMPORTS_PER_SOL;
+        // Создание транзакции для перевода SOL
+        const transaction = new solanaWeb3.Transaction().add(
+          solanaWeb3.SystemProgram.transfer({
+            fromPubkey: fromPublicKey,
+            toPubkey: donationAddress,
+            lamports: donationAmount,
+          })
+        );
+        transaction.feePayer = fromPublicKey;
+        transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        // Подписываем транзакцию
+        const signed = await window.solana.signTransaction(transaction);
+        // Отправляем транзакцию
+        const signature = await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(signature);
+        alert("Пожертвование отправлено! Signature: " + signature);
+      } catch (err) {
+        console.error(err);
+        alert("Ошибка отправки пожертвования: " + err.message);
+      }
+    }
+
+    // Привязка функции к кнопке Donate SOL
+    document.getElementById("donate-sol").addEventListener("click", sendSolDonation);
+
+    // Остальной функционал (particles.js, Chart.js, Three.js, AI Chat и т.д.) можно добавить ниже...
+  </script>
+</body>
+</html>
